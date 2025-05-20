@@ -1,15 +1,22 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-Hans-CN">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>玖宇万合剧场收益计算工具</title>
-  <link rel="icon" href="./images/favicon.png"
-    type="image/png">
+  <link rel="icon" href="./images/favicon.png" type="image/png">
 </head>
 
 <style>
+    #calculation_details {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 10px;
+    white-space: pre-wrap;
+    font-family: monospace;
+  }
   body {
     display: flex;
     flex-direction: column;
@@ -36,7 +43,7 @@
   #args_div {
     text-align: left;
     width: 362px;
-    height: 400px;
+    height: 450px;
     border-radius: 15px;
     margin-bottom: 10px;
     background-image: linear-gradient(to right, #d9a1e0, #445ad8);
@@ -101,7 +108,7 @@
 </style>
 
 <body>
-  <div id="title_div">
+  <!-- <div id="title_div">
     <h1>玖宇万合剧场收益模拟器</h1>
   </div>
 
@@ -149,18 +156,88 @@
     </div>
   </div>
 
-  <!-- 新增按钮区域 -->
   <div id="button_div">
-    <!-- <button onclick="calculateProfit()">计算收益</button> -->
+    <button onclick="calculateProfit()">计算收益</button> 
     <button onclick="resetAll()">重置参数</button>
     <button onclick="saveResults()">保存结果</button>
   </div>
 
-  <!-- 新增结果显示区域 -->
   <div id="result_div">
     <h3>计算结果：</h3>
     <p>总消费额：<span id="total_consumption">0</span></p>
     <p>预计收益：<span id="total_profit">0</span></p>
+  </div> -->
+   <!-- 修改标题 -->
+   <div id="title_div">
+    <h1>玖宇万合剧场收益模拟器</h1>
+  </div>
+
+  <div id="args_div">
+    <div class="args_class_div">
+      <h3 class="args">请选择您的身份：
+        <select class="select">
+          <option value="SVIP">SVIP</option>
+          <option value="一星服务商">一星服务商</option>
+          <option value="二星服务商">二星服务商</option>
+          <option value="三星服务商">三星服务商</option>
+        </select>
+      </h3>
+    </div>
+
+    <!-- 修改标题 -->
+    <h3 id="args_title">您直邀的会员</h3>
+    <div>
+      <!-- 普通会员 -->
+      <div class="args_class_div">
+        <h3 class="args">会员数量：
+          <input class="input_num" type="number" value="0" min="0" step="1">
+        </h3>
+        <h3 class="args">人均消费额：
+          <input class="input_num" type="number" value="1000" min="0" step="100">
+        </h3>
+      </div>
+
+      <!-- 一星服务商 -->
+      <div class="args_class_div">
+        <h3 class="args">一星服务商数量：
+          <input class="input_num" type="number" value="0" min="0" step="1">
+        </h3>
+        <h3 class="args average-input" data-level="一星">平均会员订阅费：
+          <input class="input_num" type="number" value="1000" min="0" step="100">
+        </h3>
+      </div>
+
+      <!-- 二星服务商 -->
+      <div class="args_class_div">
+        <h3 class="args">二星服务商数量：
+          <input class="input_num" type="number" value="0" min="0" step="1">
+        </h3>
+        <h3 class="args average-input" data-level="二星">平均会员订阅费：
+          <input class="input_num" type="number" value="1000" min="0" step="100">
+        </h3>
+      </div>
+
+      <!-- 新增三星服务商 -->
+      <div class="args_class_div">
+        <h3 class="args">三星服务商数量：
+          <input class="input_num" type="number" value="0" min="0" step="1">
+        </h3>
+      </div>
+    </div>
+  </div>
+
+  <div id="button_div">
+    <button onclick="resetAll()">重置参数</button>
+    <button onclick="saveResults()">保存结果</button>
+  </div>
+
+  <div id="result_div">
+    <h3>计算结果：</h3>
+    <p>总消费额：<span id="total_consumption">0</span></p>
+    <p>分成收益：<span id="original_profit">0</span></p>
+    <p>一次性收益：<span id="one_time_profit">0</span></p>
+    <p>预计总收益：<span id="total_profit">0</span></p>
+    <pre id="calculation_details"></pre>
   </div>
 </body>
 
@@ -297,6 +374,150 @@ ${Array.from(document.querySelectorAll('#args_div > div:nth-child(3) > .args_cla
     });
     document.addEventListener('input', () => calculateProfit());
   });
+
+
+  // 显示控制逻辑
+  function updateDisplay() {
+    const identity = document.querySelector('select').value;
+    const averageInputs = document.querySelectorAll('.average-input');
+    
+    averageInputs.forEach(h3 => {
+      const level = h3.getAttribute('data-level');
+      let display = 'block';
+      switch(identity) {
+        case 'SVIP':
+        case '一星服务商':
+          display = 'none';
+          break;
+        case '二星服务商':
+          if (level === '二星') display = 'none';
+          break;
+      }
+      h3.style.display = display;
+    });
+  }
+
+  // 收益计算逻辑
+  function calculateProfit() {
+    const identity = document.querySelector('select').value;
+    const inputs = document.querySelectorAll('.input_num');
+    
+    // 获取输入值
+    const [
+      memberCount, memberConsumption,
+      oneStarCount, oneStarConsumption,
+      twoStarCount, twoStarConsumption,
+      threeStarCount
+    ] = Array.from(inputs).map(input => parseInt(input.value) || 0);
+
+    // 计算总消费额
+    let totalConsumption = memberCount * memberConsumption;
+    
+    // 检查一星平均输入是否显示
+    const oneStarAvgInput = document.querySelector('.average-input[data-level="一星"]');
+    if (window.getComputedStyle(oneStarAvgInput).display !== 'none') {
+      totalConsumption += oneStarCount * oneStarConsumption;
+    }
+
+    // 检查二星平均输入是否显示
+    const twoStarAvgInput = document.querySelector('.average-input[data-level="二星"]');
+    if (window.getComputedStyle(twoStarAvgInput).display !== 'none') {
+      totalConsumption += twoStarCount * twoStarConsumption;
+    }
+
+    // 原收益计算
+    let threshold, reward;
+    switch(identity) {
+      case 'SVIP':
+      case '一星服务商':
+        threshold = 50000;
+        reward = 1500;
+        break;
+      case '二星服务商':
+        threshold = 100000;
+        reward = 2500;
+        break;
+      case '三星服务商':
+        threshold = 150000;
+        reward = 3500;
+        break;
+    }
+    const originalProfit = threshold ? Math.floor(totalConsumption / threshold) * reward : 0;
+
+    // 新增一次性收益计算
+    const oneTimeProfit = calculateOneTimeProfit(
+      identity,
+      memberCount,
+      oneStarCount,
+      twoStarCount,
+      threeStarCount
+    );
+
+    // 更新显示
+    document.getElementById('total_consumption').textContent = totalConsumption;
+    document.getElementById('original_profit').textContent = originalProfit;
+    document.getElementById('one_time_profit').textContent = oneTimeProfit;
+    document.getElementById('total_profit').textContent = originalProfit + oneTimeProfit;
+    showCalculationDetails(identity, totalConsumption, threshold, reward, originalProfit, oneTimeProfit,
+      memberCount, oneStarCount, twoStarCount, threeStarCount);
+  }
+
+  // 一次性收益计算函数
+  function calculateOneTimeProfit(identity, member, oneStar, twoStar, threeStar) {
+    switch(identity) {
+      case 'SVIP':
+        return (member + oneStar + twoStar + threeStar) * 100;
+      case '一星服务商':
+        return member * 100 + oneStar * 5000 + (twoStar + threeStar) * 10000;
+      case '二星服务商':
+        return member * 100 + oneStar * 7500 + (twoStar + threeStar) * 20000;
+      case '三星服务商':
+        return member * 100 + oneStar * 10000 + twoStar * 30000 + threeStar * 50000;
+    }
+    return 0;
+  }
+
+  // 显示详细计算过程
+  function showCalculationDetails(identity, totalConsumption, threshold, reward, originalProfit, oneTimeProfit,
+                                 member, oneStar, twoStar, threeStar) {
+    let details = `总消费额：${totalConsumption}\n`;
+    details += `分成计算：每${threshold}消费额获得${reward}，共${Math.floor(totalConsumption / threshold)}次\n`;
+    details += `一次性收益明细：\n`;
+    
+    switch(identity) {
+      case 'SVIP':
+        details += `• 所有下级：${member + oneStar + twoStar + threeStar} × 100 = ${oneTimeProfit}\n`;
+        break;
+      case '一星服务商':
+        details += `• 普通会员：${member} × 100 = ${member * 100}\n`;
+        details += `• 一星服务商：${oneStar} × 5000 = ${oneStar * 5000}\n`;
+        details += `• 二/三星服务商：${twoStar + threeStar} × 10000 = ${(twoStar + threeStar) * 10000}\n`;
+        break;
+      case '二星服务商':
+        details += `• 普通会员：${member} × 100 = ${member * 100}\n`;
+        details += `• 一星服务商：${oneStar} × 7500 = ${oneStar * 7500}\n`;
+        details += `• 二/三星服务商：${twoStar + threeStar} × 20000 = ${(twoStar + threeStar) * 20000}\n`;
+        break;
+      case '三星服务商':
+        details += `• 普通会员：${member} × 100 = ${member * 100}\n`;
+        details += `• 一星服务商：${oneStar} × 10000 = ${oneStar * 10000}\n`;
+        details += `• 二星服务商：${twoStar} × 30000 = ${twoStar * 30000}\n`;
+        details += `• 三星服务商：${threeStar} × 50000 = ${threeStar * 50000}\n`;
+        break;
+    }
+    details += `总收益：${originalProfit}（分成） + ${oneTimeProfit}（一次性） = ${originalProfit + oneTimeProfit}`;
+    document.getElementById('calculation_details').textContent = details;
+  }
+
+  // 重置功能（新增三星重置）
+  function resetAll() {
+    document.querySelectorAll('.input_num').forEach((input, index) => {
+      input.value = [0, 1000, 0, 1000, 0, 1000, 0][index] || 0;
+    });
+    document.querySelector('select').value = 'SVIP';
+    updateDisplay();
+    calculateProfit();
+  }
 </script>
 
 </html>
