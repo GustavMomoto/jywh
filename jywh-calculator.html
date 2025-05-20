@@ -55,14 +55,12 @@
 
   .args {
     text-indent: 1em;
-    /* 缩进字符 */
     text-align: right;
     padding-right: 30px;
   }
 
   .args_class_div {
     width: 362px;
-    /* height: 75px; */
     border-radius: 10px;
     background-image: linear-gradient(45deg, #445ad8, #d9a1e0);
     align-items: center;
@@ -276,30 +274,48 @@
     calculateProfit();
   }
 
-  // 修复后的保存功能
+  // 保存功能
   function saveResults() {
+    const detailsElement = document.getElementById('calculation_details');
+    const calculationDetails = detailsElement ? detailsElement.textContent : '无详细计算过程';
+
     const content = `计算时间：${new Date().toLocaleString()}
 用户身份：${document.querySelector('select').value}
+
 下级信息：
 ${Array.from(document.querySelectorAll('#args_div > div:nth-child(3) > .args_class_div'))
   .filter(div => window.getComputedStyle(div).display !== 'none')
   .map(div => {
-    const labels = Array.from(div.querySelectorAll('h3')).map(h3 => h3.textContent.trim().replace(/：$/, ''));
+    const labels = Array.from(div.querySelectorAll('h3')).map(h3 => {
+      // 清理标签文本（移除冒号和非必要空格）
+      const cleanText = h3.textContent.trim().replace(/：\s*$/, '');
+      return cleanText || '未知字段';
+    });
+    
+    // 安全获取输入值（处理可能缺少的输入框）
     const values = Array.from(div.querySelectorAll('input')).map(input => input.value);
-    return `${labels[0]}：${values[0]}，${labels[1]}：${values[1]}`;
+    
+    // 构建信息行（处理可能缺少的第二个值）
+    return `${labels[0]}：${values[0] || 0}` + 
+           (values[1] ? `，${labels[1]}：${values[1]}` : '');
   })
   .join('\n')}
+
 最终结果：
-总消费额：${document.getElementById('total_consumption').textContent}
-预计收益：${document.getElementById('total_profit').textContent}`;
+总消费额：${document.getElementById('total_consumption').textContent || 0}
+分成收益：${document.getElementById('original_profit').textContent || 0}
+一次性收益：${document.getElementById('one_time_profit').textContent || 0}
+预计总收益：${document.getElementById('total_profit').textContent || 0}
+
+详细计算过程：
+${calculationDetails}`;
 
     const blob = new Blob([content], { type: 'text/plain' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = `收益计算结果_${new Date().getTime()}.txt`;
     link.click();
-  }
-
+}
   // 初始化时自动重置
   document.addEventListener('DOMContentLoaded', () => {
     resetAll();
@@ -309,7 +325,6 @@ ${Array.from(document.querySelectorAll('#args_div > div:nth-child(3) > .args_cla
     });
     document.addEventListener('input', () => calculateProfit());
   });
-
 
   // 显示控制逻辑
   function updateDisplay() {
