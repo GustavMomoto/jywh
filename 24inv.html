@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-Hans-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>玖宇万合剧场邀请函</title>
+  <link rel="icon" href="./images/favicon.png" type="image/png">
+</head>
+
+<style>
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.985)),
+      url("./images/background.jpg");
+    background-attachment: fixed;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+
+  #image1 {
+    width: 362px;
+    height: 780px;
+    border-radius: 15px;
+    margin-bottom: 10px;
+    /* 保持图片比例并适配容器 */
+    object-fit: cover;
+    /* 可选：防止用户拖动图片 */
+    pointer-events: none;
+    -webkit-user-drag: none;
+  }
+</style>
+
+<body>
+  <img id="image1" src="./images/invitation24.png" alt="邀请函">
+</body>
+
+</html>
